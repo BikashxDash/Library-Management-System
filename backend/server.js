@@ -9,6 +9,7 @@ require('dotenv').config();
 require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
 const memberRoutes = require('./routes/memberRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/books', bookRoutes);
 app.use('/api/members', memberRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Server ko start karna
 const PORT = process.env.PORT || 5000;
