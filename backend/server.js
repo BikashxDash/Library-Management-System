@@ -7,6 +7,7 @@ require('dotenv').config();
 // DB connection file ko import kar rahe hain
 // (isse pool.connect() run ho jayega aur DB connect hoga)
 require('./config/db');
+const bookRoutes = require('./routes/bookRoutes');
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(express.json());   // Incoming JSON data ko samajhne ke liye
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running fine' });
 });
+
+app.use('/api/books', bookRoutes);
 
 // Server ko start karna
 const PORT = process.env.PORT || 5000;
