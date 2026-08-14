@@ -77,4 +77,22 @@ const deleteMember = async (req, res) => {
   }
 };
 
-module.exports = { getAllMembers, addMember, updateMember, deleteMember };
+// Function: Ek specific member ki detail do (ID se)
+const getMemberById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query('SELECT * FROM members WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching member:', error.message);
+    res.status(500).json({ error: 'Server error, could not fetch member' });
+  }
+};
+
+module.exports = { getAllMembers, getMemberById, addMember, updateMember, deleteMember };

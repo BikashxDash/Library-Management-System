@@ -85,5 +85,23 @@ const deleteBook = async (req, res) => {
   }
 };
 
+// Function: Ek specific book ki detail do (ID se)
+const getBookById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query('SELECT * FROM books WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching book:', error.message);
+    res.status(500).json({ error: 'Server error, could not fetch book' });
+  }
+};
+
 // Is function ko export kar rahe hain taaki routes file me use ho sake
-module.exports = { getAllBooks, addBook, updateBook, deleteBook };
+module.exports = { getAllBooks, getBookById, addBook, updateBook, deleteBook };
