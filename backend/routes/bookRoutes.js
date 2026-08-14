@@ -1,20 +1,12 @@
-// Ye file books se related saare URLs (endpoints) define karti hai
-
 const express = require('express');
-const router = express.Router();  // Router banaya - chhota sa mini-app jaisa
+const router = express.Router();
 
-const { getAllBooks, addBook, updateBook, deleteBook } = require('../controllers/bookController');  // Controller import kiya
+const { getAllBooks, addBook, updateBook, deleteBook } = require('../controllers/bookController');
+const protect = require('../middleware/authMiddleware');   // NAYI LINE
 
-// Jab koi GET request "/api/books" pe aayegi, to getAllBooks function chalega
-router.get('/', getAllBooks);
-
-// Jab koi POST request "/api/books" pe aayegi, to addBook function chalega
-router.post('/', addBook);
-
-// Jab koi PUT request "/api/books/:id" pe aayegi, to updateBook function chalega
-router.put('/:id', updateBook);
-
-// DELETE request ke liye bhi route banaya
-router.delete('/:id', deleteBook);  
+router.get('/', getAllBooks);                  // Sab dekh sakte hain, login zaroori nahi
+router.post('/', protect, addBook);             // Sirf logged-in user add kar sakta hai
+router.put('/:id', protect, updateBook);        // Sirf logged-in user update kar sakta hai
+router.delete('/:id', protect, deleteBook);     // Sirf logged-in user delete kar sakta hai
 
 module.exports = router;
