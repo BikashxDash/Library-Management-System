@@ -11,6 +11,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const authRoutes = require('./routes/authRoutes');
+const fineRoutes = require('./routes/fineRoutes');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/fines', fineRoutes);  
 
 // Server ko start karna
 const PORT = process.env.PORT || 5000;

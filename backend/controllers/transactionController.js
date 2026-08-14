@@ -44,12 +44,12 @@ const issueBook = async (req, res) => {
   }
 };
 
-// Function 2: Book return karo
+// Function 2: Book return karo (aur agar late hai to fine lagao)
 const returnBook = async (req, res) => {
   try {
-    const { id } = req.params;  // Ye transaction ki ID hai (URL se)
+    const { id } = req.params;
 
-    // Step A: Pehle transaction dhundo aur check karo already return to nahi hui
+    // Step A: Transaction dhundo
     const transactionCheck = await pool.query(
       'SELECT * FROM transactions WHERE id = $1',
       [id]
@@ -63,9 +63,10 @@ const returnBook = async (req, res) => {
       return res.status(400).json({ error: 'Book already returned' });
     }
 
-    const book_id = transactionCheck.rows[0].book_id;
+    const transaction = transactionCheck.rows[0];
+    const book_id = transaction.book_id;
 
-    // Step B: Transaction ko update karo - return_date aur status set karo
+    // Step B: Transaction update karo - return_date aaj ki date set karo
     const result = await pool.query(
       `UPDATE transactions
        SET return_date = CURRENT_DATE, status = 'returned'
@@ -74,15 +75,39 @@ const returnBook = async (req, res) => {
       [id]
     );
 
-    // Step C: Book ki available_copies 1 badhao (wapas available ho gayi)
+    // Step C: Book ki available_copies wapas badhao
     await pool.query(
       'UPDATE books SET available_copies = available_copies + 1 WHERE id = $1',
       [book_id]
     );
 
+    // Step D: Check karo late hai ya nahi, aur fine lagao agar zaroorat ho
+    const dueDate = new Date(transaction.due_date);
+    const returnDate = new Date();  // aaj ki date
+
+    // Dono dates ke beech ka difference milliseconds me nikalte hain, fir din me convert karte hain
+    const diffTime = returnDate - dueDate;
+    const daysLate = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let fineRecord = null;
+
+    if (daysLate > 0) {
+      const finePerDay = 5;              // Har din late hone pe ₹5 fine (tum change kar sakte ho)
+      const fineAmount = daysLate * finePerDay;
+
+      const fineResult = await pool.query(
+        `INSERT INTO fines (transaction_id, member_id, amount, days_late)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [id, transaction.member_id, fineAmount, daysLate]
+      );
+
+      fineRecord = fineResult.rows[0];
+    }
+
     res.status(200).json({
-      message: 'Book returned successfully',
+      message: fineRecord ? 'Book returned late, fine applied' : 'Book returned successfully',
       transaction: result.rows[0],
+      fine: fineRecord,   // Agar late nahi hai to ye null rahega
     });
   } catch (error) {
     console.error('Error returning book:', error.message);
