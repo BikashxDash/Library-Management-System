@@ -2,13 +2,42 @@
 
 const pool = require('../config/db');  // Database connection import kiya
 
-// Function 1: Saari books ki list bhejo
+// Function 1: Saari books ki list bhejo (search/filter ke saath)
 const getAllBooks = async (req, res) => {
   try {
-    // 'books' table se saara data select kar rahe hain
-    const result = await pool.query('SELECT * FROM books ORDER BY id ASC');
+    // req.query me URL ke "?" ke baad wali values milti hain
+    // Jaise /api/books?title=harry&category=Fiction
+    const { title, author, category } = req.query;
 
-    // result.rows me actual data hota hai array ke form me
+    // Base query - ye har case me chalegi
+    let query = 'SELECT * FROM books WHERE 1=1';
+    const values = [];   // Query ke andar $1, $2... ki actual values yahan jayengi
+    let paramIndex = 1;  // $1, $2 karke counter badhta jayega
+
+    // Agar title diya hai, query me add karo
+    if (title) {
+      query += ` AND title ILIKE $${paramIndex}`;
+      values.push(`%${title}%`);   // % ka matlab - kahin bhi match ho jaye (partial search)
+      paramIndex++;
+    }
+
+    // Agar author diya hai, query me add karo
+    if (author) {
+      query += ` AND author ILIKE $${paramIndex}`;
+      values.push(`%${author}%`);
+      paramIndex++;
+    }
+
+    // Agar category diya hai, query me add karo
+    if (category) {
+      query += ` AND category ILIKE $${paramIndex}`;
+      values.push(`%${category}%`);
+      paramIndex++;
+    }
+
+    query += ' ORDER BY id ASC';
+
+    const result = await pool.query(query, values);
     res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching books:', error.message);
