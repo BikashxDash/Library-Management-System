@@ -5,8 +5,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 // DB connection file ko import kar rahe hain
-// (isse pool.connect() run ho jayega aur DB connect hoga)
 require('./config/db');
+
+// Saare routes import kar rahe hain
 const bookRoutes = require('./routes/bookRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
@@ -16,20 +17,21 @@ const reservationRoutes = require('./routes/reservationRoutes');
 
 const app = express();
 
-// Middleware - ye har request ke saath chalta hai
-app.use(cors());           // Frontend (alag port pe) se request allow karega
-app.use(express.json());   // Incoming JSON data ko samajhne ke liye
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-// Ek test route - check karne ke liye ki server sahi chal raha hai
+// Test route
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running fine' });
 });
 
+// Saare routes ko connect kar rahe hain
 app.use('/api/books', bookRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/fines', fineRoutes);  
+app.use('/api/fines', fineRoutes);
 app.use('/api/reservations', reservationRoutes);
 
 // Server ko start karna
