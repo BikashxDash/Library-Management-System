@@ -1,29 +1,30 @@
 // Login page - user email/password daal ke login karega
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
-  // Form ke fields ke liye state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Form submit hote hi ye function chalega
+  const navigate = useNavigate();
+  const { login } = useAuth();   // AuthContext se login function le rahe hain
+
   const handleSubmit = async (e) => {
-    e.preventDefault();   // Page ko refresh hone se rokta hai (default browser behavior)
+    e.preventDefault();
     setError('');
 
     try {
       const response = await api.post('/auth/login', { email, password });
 
-      // Backend se token milega, usko browser me save karo (localStorage)
-      // Taaki refresh karne pe bhi login yaad rahe
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Context ka login function call karo - ye localStorage bhi handle karega
+      // aur poore app ko batayega ki user ab logged in hai
+      login(response.data.user, response.data.token);
 
-      alert('Login successful!');
-      // Yahan hum aage member/admin ko redirect karenge (agla step)
+      navigate('/');   // Home page pe le jao
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     }
