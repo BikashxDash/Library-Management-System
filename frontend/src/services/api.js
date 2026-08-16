@@ -37,4 +37,10 @@ export const deleteBook = (id, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
+// Dashboard stats lao
+export const getDashboardStats = (token) =>
+  api.get('/dashboard', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 export default api;

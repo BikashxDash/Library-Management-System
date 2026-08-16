@@ -14,6 +14,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const authRoutes = require('./routes/authRoutes');
 const fineRoutes = require('./routes/fineRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/fines', fineRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Server ko start karna
 const PORT = process.env.PORT || 5000;

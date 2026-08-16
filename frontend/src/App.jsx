@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import BookList from './components/BookList';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
 
 function Navigation() {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ function Navigation() {
       {user ? (
         // Agar user logged in hai, to naam aur Logout dikhao
         <>
+          <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
           <span style={{ marginRight: '15px' }}>Hi, {user.name}</span>
           <button onClick={logout}>Logout</button>
         </>
@@ -41,6 +43,7 @@ function App() {
             <Route path="/" element={<BookList />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Routes>
         </div>
       </BrowserRouter>
