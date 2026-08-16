@@ -1,7 +1,26 @@
 // Ye component ek single book ka card dikhata hai
-// "book" prop ke through data bahar se aata hai
 
-function BookCard({ book }) {
+import { deleteBook } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+
+function BookCard({ book, onDelete }) {
+  const { user } = useAuth();
+
+  const handleDelete = async () => {
+    // Confirm karo pehle, taaki galti se delete na ho jaye
+    const confirmDelete = window.confirm(`Delete "${book.title}"?`);
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem('token');
+
+    try {
+      await deleteBook(book.id, token);
+      onDelete(book.id);   // Parent (BookList) ko batao ki ye book delete ho gayi
+    } catch (error) {
+      alert(error.response?.data?.error || 'Could not delete book');
+    }
+  };
+
   return (
     <div style={{
       border: '1px solid #ddd',
@@ -15,6 +34,13 @@ function BookCard({ book }) {
       <p style={{ margin: '4px 0', fontSize: '14px' }}>
         Available: {book.available_copies} / {book.total_copies}
       </p>
+
+      {/* Delete button sirf logged-in user ko dikhega */}
+      {user && (
+        <button onClick={handleDelete} style={{ marginTop: '8px', color: 'red' }}>
+          Delete
+        </button>
+      )}
     </div>
   );
 }

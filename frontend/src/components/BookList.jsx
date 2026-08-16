@@ -20,6 +20,12 @@ function BookList() {
       });
   }, []);
 
+  // Ye function BookCard se call hoga jab koi book delete ho
+  const handleDelete = (deletedId) => {
+    // Purani list me se deleted book hata do, baaki sab rakho
+    setBooks(books.filter((book) => book.id !== deletedId));
+  };
+
   if (loading) {
     return <p>Loading books...</p>;
   }
@@ -30,7 +36,9 @@ function BookList() {
       {books.length === 0 ? (
         <p>No books found.</p>
       ) : (
-        books.map((book) => <BookCard key={book.id} book={book} />)
+        books.map((book) => (
+          <BookCard key={book.id} book={book} onDelete={handleDelete} />
+        ))
       )}
     </div>
   );

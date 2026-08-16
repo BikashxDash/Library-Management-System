@@ -9,6 +9,6 @@ router.get('/', getAllBooks);                                 // Sab dekh sakte 
 router.get('/:id', getBookById);                              // Sab dekh sakte hain, login zaroori nahi
 router.post('/', protect, validateBook, addBook);             // Sirf logged-in user add kar sakta hai
 router.put('/:id', protect, validateBook, updateBook);        // Sirf logged-in user update kar sakta hai
-router.delete('/:id', protect, validateBook, deleteBook);                                                  // Sirf logged-in user delete kar sakta hai
+router.delete('/:id', protect, deleteBook);                                                  // Sirf logged-in user delete kar sakta hai
 
 module.exports = router;
