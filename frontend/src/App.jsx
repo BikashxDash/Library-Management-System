@@ -6,7 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MembersPage from './pages/MembersPage';
-import AddBookPage from './pages/AddBookpage';  
+import AddBookPage from './pages/AddBookpage';
+import EditBookPage from './pages/EditBookPage';
 
 function Navigation() {
   const { user, logout } = useAuth();
@@ -65,6 +66,12 @@ function App() {
                    element={
                     <ProtectedRoute>
                       <AddBookPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/edit-book/:id"
+                   element={
+                    <ProtectedRoute>
+                      <EditBookPage />
                     </ProtectedRoute>
             } />
           </Routes>

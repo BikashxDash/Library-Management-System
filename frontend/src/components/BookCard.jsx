@@ -2,6 +2,7 @@
 
 import { deleteBook } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 function BookCard({ book, onDelete }) {
   const { user } = useAuth();
@@ -35,11 +36,12 @@ function BookCard({ book, onDelete }) {
         Available: {book.available_copies} / {book.total_copies}
       </p>
 
-      {/* Delete button sirf logged-in user ko dikhega */}
+      {/* Delete & Edit button sirf logged-in user ko dikhega */}
       {user && (
-        <button onClick={handleDelete} style={{ marginTop: '8px', color: 'red' }}>
-          Delete
-        </button>
+        <div style={{ marginTop: '8px' }}>
+          <Link to={`/edit-book/${book.id}`} style={{ marginRight: '10px' }}>Edit</Link>
+          <button onClick={handleDelete} style={{ color: 'red' }}>Delete</button>
+        </div>
       )}
     </div>
   );
