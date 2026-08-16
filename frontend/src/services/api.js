@@ -43,4 +43,25 @@ export const getDashboardStats = (token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
+// Members se related saare API calls
+
+export const getMembers = () => api.get('/members');
+
+export const getMemberById = (id) => api.get(`/members/${id}`);
+
+export const addMember = (memberData, token) =>
+  api.post('/members', memberData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const updateMember = (id, memberData, token) =>
+  api.put(`/members/${id}`, memberData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const deleteMember = (id, token) =>
+  api.delete(`/members/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 export default api;

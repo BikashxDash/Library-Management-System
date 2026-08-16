@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import MembersPage from './pages/MembersPage';
 
 function Navigation() {
   const { user, logout } = useAuth();
@@ -17,6 +18,7 @@ function Navigation() {
         // Agar user logged in hai, to naam aur Logout dikhao
         <>
           <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
+          <Link to="/members" style={{ marginRight: '15px' }}>Members</Link>
           <span style={{ marginRight: '15px' }}>Hi, {user.name}</span>
           <button onClick={logout}>Logout</button>
         </>
@@ -48,6 +50,12 @@ function App() {
                    element={
                     <ProtectedRoute>
                       <DashboardPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/members"
+                   element={
+                    <ProtectedRoute>
+                      <MembersPage />
                     </ProtectedRoute>
             } />
           </Routes>
