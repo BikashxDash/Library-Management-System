@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MembersPage from './pages/MembersPage';
+import AddBookPage from './pages/AddBookpage';  
 
 function Navigation() {
   const { user, logout } = useAuth();
@@ -19,6 +20,7 @@ function Navigation() {
         <>
           <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
           <Link to="/members" style={{ marginRight: '15px' }}>Members</Link>
+          <Link to="/add-book" style={{ marginRight: '15px' }}>Add Book</Link>
           <span style={{ marginRight: '15px' }}>Hi, {user.name}</span>
           <button onClick={logout}>Logout</button>
         </>
@@ -27,6 +29,7 @@ function Navigation() {
         <>
           <Link to="/login" style={{ marginRight: '15px' }}>Login</Link>
           <Link to="/register">Register</Link>
+
         </>
       )}
     </nav>
@@ -56,6 +59,12 @@ function App() {
                    element={
                     <ProtectedRoute>
                       <MembersPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/add-book"
+                   element={
+                    <ProtectedRoute>
+                      <AddBookPage />
                     </ProtectedRoute>
             } />
           </Routes>
