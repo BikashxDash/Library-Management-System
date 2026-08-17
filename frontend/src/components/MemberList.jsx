@@ -28,7 +28,13 @@ function MemberList() {
       {members.length === 0 ? (
         <p>No members found.</p>
       ) : (
-        members.map((member) => <MemberCard key={member.id} member={member} />)
+        members.map((member) => (
+        <MemberCard 
+          key={member.id} 
+          member={member} 
+          onDelete={(id) => setMembers(prev => prev.filter(m => m.id !== id))} 
+        />  
+        ))
       )}
     </div>
   );

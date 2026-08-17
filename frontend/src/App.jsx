@@ -8,6 +8,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import MembersPage from './pages/MembersPage';
 import AddBookPage from './pages/AddBookpage';
 import EditBookPage from './pages/EditBookPage';
+import AddMemberPage from './pages/AddMemberPage';
+import EditMemberPage from './pages/EditMemberPage';
 
 function Navigation() {
   const { user, logout } = useAuth();
@@ -21,6 +23,7 @@ function Navigation() {
         <>
           <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
           <Link to="/members" style={{ marginRight: '15px' }}>Members</Link>
+          <Link to="/add-member" style={{ marginRight: '15px' }}>Add Member</Link>
           <Link to="/add-book" style={{ marginRight: '15px' }}>Add Book</Link>
           <span style={{ marginRight: '15px' }}>Hi, {user.name}</span>
           <button onClick={logout}>Logout</button>
@@ -72,6 +75,18 @@ function App() {
                    element={
                     <ProtectedRoute>
                       <EditBookPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/add-member"
+                   element={
+                    <ProtectedRoute>
+                      <AddMemberPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/edit-member/:id"
+                   element={
+                    <ProtectedRoute>
+                      <EditMemberPage />
                     </ProtectedRoute>
             } />
           </Routes>
