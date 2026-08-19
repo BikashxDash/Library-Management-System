@@ -23,4 +23,15 @@ const protect = (req, res, next) => {
   }
 };
 
-module.exports = protect;
+// Ye middleware check karta hai ki logged-in user Admin hai ya nahi
+// Hamesha 'protect' ke BAAD use hoga, kyunki isko req.user chahiye
+
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();  // Admin hai, aage jaane do
+  } else {
+    res.status(403).json({ error: 'Access denied. Admin only.' });
+  }
+};
+
+module.exports = { protect, isAdmin };

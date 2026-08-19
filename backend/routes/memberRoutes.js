@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { getAllMembers, getMemberById, addMember, updateMember, deleteMember } = require('../controllers/memberController');
-const protect = require('../middleware/authMiddleware');  
+const { protect } = require('../middleware/authMiddleware');  
 const { validateMember } = require('../middleware/validationMiddleware');
 
 router.get('/', getAllMembers);                   // Sab dekh sakte hain

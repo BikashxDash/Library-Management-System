@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { getAllBooks, getBookById, addBook, updateBook, deleteBook } = require('../controllers/bookController');
-const protect = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const { validateBook } = require('../middleware/validationMiddleware');
 
 router.get('/', getAllBooks);                                 // Sab dekh sakte hain, login zaroori nahi

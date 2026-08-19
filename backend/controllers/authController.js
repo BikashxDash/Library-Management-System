@@ -9,7 +9,6 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Step A: Check karo email pehle se exist to nahi karti
     const existingUser = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
@@ -19,19 +18,18 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: 'User already exists with this email' });
     }
 
-    // Step B: Password ko hash karo (plain text kabhi save nahi karte)
-    const salt = await bcrypt.genSalt(10);              // "salt" ek random string hai hashing ko aur secure banane ke liye
+    const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Step C: User ko DB me save karo (hashed password ke saath)
+    // Public register hamesha 'member' role, 'pending' status ke saath banega
     const result = await pool.query(
-      `INSERT INTO users (name, email, password)
-       VALUES ($1, $2, $3) RETURNING id, name, email, role`,
+      `INSERT INTO users (name, email, password, role, status)
+       VALUES ($1, $2, $3, 'member', 'pending') RETURNING id, name, email, role, status`,
       [name, email, hashedPassword]
     );
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'Registration successful. Please wait for admin approval.',
       user: result.rows[0],
     });
   } catch (error) {
@@ -45,7 +43,6 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Step A: User ko email se dhundo
     const userResult = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
@@ -57,18 +54,25 @@ const loginUser = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Step B: Password match karo (hashed password se compare karta hai bcrypt)
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    // Step C: Sab sahi hai, ab JWT token banao
+    // Naya check: agar member abhi approved nahi hai to login block karo
+    if (user.status === 'pending') {
+      return res.status(403).json({ error: 'Your account is pending admin approval' });
+    }
+
+    if (user.status === 'rejected') {
+      return res.status(403).json({ error: 'Your registration was rejected. Contact admin.' });
+    }
+
     const token = jwt.sign(
-      { id: user.id, role: user.role },   // Ye data token ke andar store hoga
-      process.env.JWT_SECRET,             // Secret key se sign karte hain
-      { expiresIn: '7d' }                 // Token 7 din tak valid rahega
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
     res.status(200).json({
@@ -82,4 +86,60 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+// Function 3: Sirf Admin dekh sakta hai konse users pending hain approval ke liye
+const getPendingUsers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, email, role, status, created_at 
+       FROM users WHERE status = 'pending' ORDER BY created_at DESC`
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching pending users:', error.message);
+    res.status(500).json({ error: 'Server error, could not fetch pending users' });
+  }
+};
+
+// Function 4: Admin ek user ko approve karta hai
+const approveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE users SET status = 'approved' WHERE id = $1 RETURNING id, name, email, role, status`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User approved successfully', user: result.rows[0] });
+  } catch (error) {
+    console.error('Error approving user:', error.message);
+    res.status(500).json({ error: 'Server error, could not approve user' });
+  }
+};
+
+// Function 5: Admin ek user ko reject karta hai
+const rejectUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE users SET status = 'rejected' WHERE id = $1 RETURNING id, name, email, role, status`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User rejected', user: result.rows[0] });
+  } catch (error) {
+    console.error('Error rejecting user:', error.message);
+    res.status(500).json({ error: 'Server error, could not reject user' });
+  }
+};
+
+module.exports = { registerUser, loginUser, getPendingUsers, approveUser, rejectUser };
