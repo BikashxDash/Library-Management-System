@@ -29,13 +29,13 @@ function HomePage() {
           font-size: clamp(24px, 4vw, 40px);
           font-weight: 500;
           line-height: 1.35;
-          color: #1C2233;
+          color: var(--text-primary);
           max-width: 720px;
           margin: 0 0 14px 0;
         }
         .home-attribution {
           font-size: 14px;
-          color: #5B6472;
+          color: var(--text-muted);
           margin: 0 0 40px 0;
         }
         .home-actions {
@@ -61,8 +61,8 @@ function HomePage() {
         .home-btn-primary:hover { background: #2a3348; transform: translateY(-1px); }
         .home-btn-secondary {
           background: transparent;
-          color: #1C2233;
-          border: 1.5px solid #d8d4c8;
+          color: var(--text-primary);
+          border: 1.5px solid var(--border);
         }
         .home-btn-secondary:hover { border-color: #A9812F; color: #A9812F; }
 
