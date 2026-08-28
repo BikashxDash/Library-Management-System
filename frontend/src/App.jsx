@@ -12,6 +12,7 @@ import AddBookPage from './pages/AddBookpage';
 import EditBookPage from './pages/EditBookPage';
 import AddMemberPage from './pages/AddMemberPage';
 import EditMemberPage from './pages/EditMemberPage';
+import BookCategories from './components/BookCatagories';
 
 function Header({ theme, toggleTheme }) {
   const { user, logout } = useAuth();
@@ -32,7 +33,7 @@ function Header({ theme, toggleTheme }) {
       {/* Nav bar: links + theme toggle */}
       <nav className="app-nav">
         <button
-          className="app-hamburger"
+          className={`app-hamburger ${menuOpen ? 'app-hamburger-open' : ''}`}
           onClick={() => setMenuOpen((o) => !o)}
           aria-label="Toggle menu"
           aria-expanded={menuOpen}
@@ -64,7 +65,10 @@ function Header({ theme, toggleTheme }) {
           )}
         </div>
 
-        <button className="app-theme-toggle" onClick={toggleTheme}>
+        <button
+          className={`app-theme-toggle ${menuOpen ? 'app-theme-toggle-hide' : ''}`}
+          onClick={toggleTheme}
+        >
           {theme === 'light' ? '🌙' : '☀️'}
         </button>
       </nav>
@@ -146,6 +150,7 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 24px;
           position: relative;
           padding: 0 28px;
           min-height: 56px;
@@ -213,6 +218,16 @@ function App() {
           height: 2px;
           background: #ffffff;
           border-radius: 2px;
+          transition: transform 0.25s ease, opacity 0.2s ease;
+        }
+        .app-hamburger-open span:nth-child(1) {
+          transform: translateY(7px) rotate(45deg);
+        }
+        .app-hamburger-open span:nth-child(2) {
+          opacity: 0;
+        }
+        .app-hamburger-open span:nth-child(3) {
+          transform: translateY(-7px) rotate(-45deg);
         }
 
         .app-content {
@@ -221,8 +236,11 @@ function App() {
 
         @media (max-width: 640px) {
           .app-title { font-size: 14px; }
-          .app-nav { padding: 12px 20px; justify-content: space-between; }
-          .app-hamburger { display: flex; }
+          .app-nav { padding: 12px 20px; justify-content: space-between; gap: 0;}
+          .app-theme-toggle {
+            order: 1;
+          }
+          .app-hamburger { display: flex;  order: 3;}
           .app-tagline { font-size: 10.5px; }
           .app-nav-links {
             display: none;
@@ -231,11 +249,13 @@ function App() {
             gap: 14px;
             width: 100%;
             margin-top: 16px;
+            order: 2;
           }
           .app-nav-links-open { display: flex; }
           .app-nav-logout, .app-theme-toggle { width: 100%; text-align: left; }
           .app-title-full { display: none; }
           .app-title-short { display: inline; font-size: 20px; }
+          .app-theme-toggle-hide {  display: none;  }
         }
       `}</style>
 
@@ -245,7 +265,8 @@ function App() {
         <div className="app-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/books" element={<BookList />} />
+            <Route path="/books" element={<BookCategories />} />
+            <Route path="/books/:category" element={<BookList />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/dashboard"
