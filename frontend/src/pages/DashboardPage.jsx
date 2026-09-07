@@ -26,8 +26,8 @@ function DashboardPage() {
   if (!stats) return <p style={{ padding: '24px' }}>Could not load dashboard.</p>;
 
   const cards = [
-    { label: 'Total Books', value: stats.totalBooks, icon: '📚', accent: '#A9812F' },
-    { label: 'Total Members', value: stats.totalMembers, icon: '👥', accent: '#4a7fd6' },
+    { label: 'Total Books', value: stats.totalBooks, icon: '📚', accent: '#A9812F', to: '/books' },
+  { label: 'Total Members', value: stats.totalMembers, icon: '👥', accent: '#A9812F', to: '/members' },
     { label: 'Books Issued', value: stats.issuedBooks, icon: '📖', accent: '#2ea043' },
     { label: 'Overdue Books', value: stats.overdueBooks, icon: '⏰', accent: '#dc3545', alert: stats.overdueBooks > 0 },
     { label: 'Unpaid Fines', value: `₹${stats.unpaidFines}`, icon: '💰', accent: '#dc3545', alert: stats.unpaidFines > 0 },
@@ -78,9 +78,13 @@ function DashboardPage() {
           padding: 22px 18px;
           transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
+        .dash-card-clickable {
+          cursor: pointer;
+        }
         .dash-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 12px 24px -12px rgba(0,0,0,0.2);
+          border-color: #A9812F;
         }
         .dash-card.alert {
           border-color: rgba(220, 53, 69, 0.4);
@@ -148,15 +152,24 @@ function DashboardPage() {
         </div>
 
         <div className="dash-grid">
-          {cards.map((card) => (
-            <div key={card.label} className={`dash-card ${card.alert ? 'alert' : ''}`}>
-              <div className="dash-card-icon">{card.icon}</div>
-              <p className="dash-card-value" style={{ color: card.alert ? '#dc3545' : 'var(--text-primary)' }}>
-                {card.value}
-              </p>
-              <p className="dash-card-label">{card.label}</p>
-            </div>
-          ))}
+          {cards.map((card) => {
+            const CardWrapper = card.to ? Link : 'div';
+            const wrapperProps = card.to ? { to: card.to } : {};
+
+            return (
+              <CardWrapper
+                key={card.label}
+                className={`dash-card ${card.alert ? 'alert' : ''} ${card.to ? 'dash-card-clickable' : ''}`}
+                {...wrapperProps}
+              >
+                <div className="dash-card-icon">{card.icon}</div>
+                <p className="dash-card-value" style={{ color: card.alert ? '#dc3545' : 'var(--text-primary)' }}>
+                  {card.value}
+                </p>
+                <p className="dash-card-label">{card.label}</p>
+              </CardWrapper>
+            );
+          })}
         </div>
 
         <h3 className="dash-section-title">Quick Actions</h3>
