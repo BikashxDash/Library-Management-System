@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getBooks } from '../services/api';
 import BookCard from './BookCard';
 
@@ -25,6 +25,7 @@ const categoryLabels = {
 
 function BookList() {
   const { category } = useParams();
+  const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,12 +75,17 @@ function BookList() {
           padding: 8px 18px 8px 14px;
           border-radius: 999px;
           margin-bottom: 24px;
+          cursor: pointer;
           transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
         .booklist-back:hover {
           border-color: #A9812F;
           color: #A9812F;
           transform: translateX(-2px);
+        }
+        .booklist-back-arrow {
+          font-size: 18px;
+          line-height: 1;
         }
         .booklist-title {
           font-family: Georgia, serif;
@@ -109,9 +115,9 @@ function BookList() {
 
       <div className="booklist-page">
         {category && (
-          <Link to="/books" className="booklist-back">
-            ← Back
-          </Link>
+          <button onClick={() => navigate(-1)} className="booklist-back">
+            <span className="booklist-back-arrow">←</span> Back
+          </button>
         )}
 
         <h2 className="booklist-title">

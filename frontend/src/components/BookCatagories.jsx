@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 
 const categories = [
   { slug: 'computer-science', label: 'Computer Science', icon: '💻' },
@@ -21,6 +21,7 @@ const categories = [
 ];
 
 function BookCategories() {
+  const navigate = useNavigate();
   return (
     <>
       <style>{`
@@ -51,6 +52,7 @@ function BookCategories() {
           border-radius: 999px;
           transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
           flex-shrink: 0;
+          cursor: pointer;
         }
         .cat-back:hover {
           border-color: #A9812F;
@@ -134,9 +136,9 @@ function BookCategories() {
 
       <div className="cat-page">
         <div className="cat-top-row">
-          <Link to="/" className="cat-back">
+          <button onClick={() => navigate(-1)} className="cat-back">
             <span className="cat-back-arrow">←</span> Back
-          </Link>
+          </button>
 
           <div className="cat-heading">
             <p className="cat-eyebrow">Browse the Catalog</p>
