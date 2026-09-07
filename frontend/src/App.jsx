@@ -48,11 +48,9 @@ function Header({ theme, toggleTheme }) {
 
           {user ? (
             <>
-              <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>
               <Link to="/members" onClick={closeMenu}>Members</Link>
               <Link to="/add-member" onClick={closeMenu}>Add Member</Link>
               <Link to="/add-book" onClick={closeMenu}>Add Book</Link>
-              <span className="app-nav-user">Hi, {user.name}</span>
               <button className="app-nav-logout" onClick={() => { logout(); closeMenu(); }}>
                 Logout
               </button>
