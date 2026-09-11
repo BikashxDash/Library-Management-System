@@ -13,6 +13,7 @@ import EditBookPage from './pages/EditBookPage';
 import AddMemberPage from './pages/AddMemberPage';
 import EditMemberPage from './pages/EditMemberPage';
 import BookCategories from './components/BookCatagories';
+import FineList from './components/FineList';
 
 function Header({ theme, toggleTheme }) {
   const { user, logout } = useAuth();
@@ -301,6 +302,12 @@ function App() {
                    element={
                     <ProtectedRoute>
                       <EditMemberPage />
+                    </ProtectedRoute>
+            } />
+            <Route path="/fines"
+                   element={
+                    <ProtectedRoute>
+                      <FineList />
                     </ProtectedRoute>
             } />
           </Routes>
