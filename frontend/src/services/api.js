@@ -64,4 +64,16 @@ export const deleteMember = (id, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
+// Fines se related saare API calls
+
+export const getFines = (token) =>
+  api.get('/fines', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const payFine = (id, token) =>
+  api.put(`/fines/pay/${id}`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 export default api;
