@@ -30,7 +30,7 @@ function DashboardPage() {
   { label: 'Total Members', value: stats.totalMembers, icon: '👥', accent: '#A9812F', to: '/members' },
     { label: 'Books Issued', value: stats.issuedBooks, icon: '📖', accent: '#2ea043' },
     { label: 'Overdue Books', value: stats.overdueBooks, icon: '⏰', accent: '#dc3545', alert: stats.overdueBooks > 0 },
-    { label: 'Unpaid Fines', value: `₹${stats.unpaidFines}`, icon: '💰', accent: '#dc3545', alert: stats.unpaidFines > 0 },
+    { label: 'Unpaid Fines', value: `₹${stats.unpaidFines}`, icon: '💰', to: '/fines', alert: stats.unpaidFines > 0 },
   ];
 
   const quickLinks = [
