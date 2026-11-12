@@ -4,13 +4,17 @@ const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Function 1: Naya admin/librarian register karo
-const registerUser = async (req, res) => {
+// Function 1: Naya member register karo
+const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+
     const existingUser = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT id FROM users WHERE email = $1',
       [email]
     );
 
@@ -33,15 +37,18 @@ const registerUser = async (req, res) => {
       user: result.rows[0],
     });
   } catch (error) {
-    console.error('Error registering user:', error.message);
-    res.status(500).json({ error: 'Server error, could not register user' });
+    next(error);
   }
 };
 
 // Function 2: Login karo aur token pao
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
     const userResult = await pool.query(
       'SELECT * FROM users WHERE email = $1',
@@ -60,13 +67,17 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
 
-    // Naya check: agar member abhi approved nahi hai to login block karo
+    // Status verification: pending / rejected / not approved accounts cannot login
     if (user.status === 'pending') {
       return res.status(403).json({ error: 'Your account is pending admin approval' });
     }
 
     if (user.status === 'rejected') {
       return res.status(403).json({ error: 'Your registration was rejected. Contact admin.' });
+    }
+
+    if (user.status !== 'approved') {
+      return res.status(403).json({ error: 'Your account is not approved' });
     }
 
     const token = jwt.sign(
@@ -81,13 +92,12 @@ const loginUser = async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    console.error('Error logging in:', error.message);
-    res.status(500).json({ error: 'Server error, could not login' });
+    next(error);
   }
 };
 
 // Function 3: Sirf Admin dekh sakta hai konse users pending hain approval ke liye
-const getPendingUsers = async (req, res) => {
+const getPendingUsers = async (req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT id, name, email, role, status, created_at 
@@ -95,34 +105,53 @@ const getPendingUsers = async (req, res) => {
     );
     res.status(200).json(result.rows);
   } catch (error) {
-    console.error('Error fetching pending users:', error.message);
-    res.status(500).json({ error: 'Server error, could not fetch pending users' });
+    next(error);
   }
 };
 
-// Function 4: Admin ek user ko approve karta hai
-const approveUser = async (req, res) => {
+// Function 4: Admin ek user ko approve karta hai (with DB transaction)
+const approveUser = async (req, res, next) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `UPDATE users SET status = 'approved' WHERE id = $1 RETURNING id, name, email, role, status`,
       [id]
     );
 
     if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json({ message: 'User approved successfully', user: result.rows[0] });
+    const user = result.rows[0];
+
+    // Agar role member hai to members table me entry ensure karo
+    if (user.role === 'member') {
+      const existingMember = await client.query('SELECT id FROM members WHERE email = $1', [user.email]);
+      if (existingMember.rows.length === 0) {
+        await client.query(
+          `INSERT INTO members (name, email, is_active) VALUES ($1, $2, true)`,
+          [user.name, user.email]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: 'User approved successfully', user });
   } catch (error) {
-    console.error('Error approving user:', error.message);
-    res.status(500).json({ error: 'Server error, could not approve user' });
+    await client.query('ROLLBACK');
+    next(error);
+  } finally {
+    client.release();
   }
 };
 
 // Function 5: Admin ek user ko reject karta hai
-const rejectUser = async (req, res) => {
+const rejectUser = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -137,8 +166,7 @@ const rejectUser = async (req, res) => {
 
     res.status(200).json({ message: 'User rejected', user: result.rows[0] });
   } catch (error) {
-    console.error('Error rejecting user:', error.message);
-    res.status(500).json({ error: 'Server error, could not reject user' });
+    next(error);
   }
 };
 

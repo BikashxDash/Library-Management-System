@@ -14,11 +14,12 @@ const pool = new Pool({
 });
 
 // Test karte hain ki connection ho paaya ya nahi
-pool.connect((err) => {
+pool.connect((err, client, release) => {
   if (err) {
     console.error('Database connection FAILED:', err.message);
   } else {
     console.log('PostgreSQL connected successfully');
+    if (release) release();
   }
 });
 

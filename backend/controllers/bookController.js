@@ -1,34 +1,28 @@
 // Ye file books se related saara logic rakhti hai (get, add, update, delete)
 
-const pool = require('../config/db');  // Database connection import kiya
+const pool = require('../config/db');
 
 // Function 1: Saari books ki list bhejo (search/filter ke saath)
-const getAllBooks = async (req, res) => {
+const getAllBooks = async (req, res, next) => {
   try {
-    // req.query me URL ke "?" ke baad wali values milti hain
-    // Jaise /api/books?title=harry&category=Fiction
     const { title, author, category } = req.query;
 
-    // Base query - ye har case me chalegi
     let query = 'SELECT * FROM books WHERE 1=1';
-    const values = [];   // Query ke andar $1, $2... ki actual values yahan jayengi
-    let paramIndex = 1;  // $1, $2 karke counter badhta jayega
+    const values = [];
+    let paramIndex = 1;
 
-    // Agar title diya hai, query me add karo
     if (title) {
       query += ` AND title ILIKE $${paramIndex}`;
-      values.push(`%${title}%`);   // % ka matlab - kahin bhi match ho jaye (partial search)
+      values.push(`%${title}%`);
       paramIndex++;
     }
 
-    // Agar author diya hai, query me add karo
     if (author) {
       query += ` AND author ILIKE $${paramIndex}`;
       values.push(`%${author}%`);
       paramIndex++;
     }
 
-    // Agar category diya hai, query me add karo
     if (category) {
       query += ` AND category ILIKE $${paramIndex}`;
       values.push(`%${category}%`);
@@ -40,37 +34,47 @@ const getAllBooks = async (req, res) => {
     const result = await pool.query(query, values);
     res.status(200).json(result.rows);
   } catch (error) {
-    console.error('Error fetching books:', error.message);
-    res.status(500).json({ error: 'Server error, could not fetch books' });
+    next(error);
   }
 };
 
-// Function 2: Nayi book add karo
-const addBook = async (req, res) => {
+// Function 2: Nayi book add karo (Admin only)
+const addBook = async (req, res, next) => {
   try {
-    // req.body me wo data aayega jo frontend/Postman se bheja jayega
     const { title, author, isbn, category, total_copies } = req.body;
+    const copies = parseInt(total_copies, 10) || 1;
 
-    // SQL query me $1, $2... placeholders hain - ye SQL injection se bachate hain
+    if (copies < 0) {
+      return res.status(400).json({ error: 'Total copies cannot be negative' });
+    }
+
     const result = await pool.query(
       `INSERT INTO books (title, author, isbn, category, total_copies, available_copies)
        VALUES ($1, $2, $3, $4, $5, $5) RETURNING *`,
-      [title, author, isbn, category, total_copies]
+      [title, author, isbn || null, category || null, copies]
     );
 
-    // RETURNING * ki wajah se newly added book wapas milegi
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error adding book:', error.message);
-    res.status(500).json({ error: 'Server error, could not add book' });
+    next(error);
   }
 };
 
-// Function 3: Book ki details update karo (ID ke basis pe)
-const updateBook = async (req, res) => {
+// Function 3: Book ki details update karo (Admin only)
+const updateBook = async (req, res, next) => {
   try {
-    const { id } = req.params;  // URL se book ki ID milegi (jaise /api/books/1)
+    const { id } = req.params;
     const { title, author, isbn, category, total_copies, available_copies } = req.body;
+
+    const total = parseInt(total_copies, 10);
+    const available = parseInt(available_copies, 10);
+
+    if (available < 0) {
+      return res.status(400).json({ error: 'Available copies cannot be negative' });
+    }
+    if (available > total) {
+      return res.status(400).json({ error: 'Available copies cannot exceed total copies' });
+    }
 
     const result = await pool.query(
       `UPDATE books
@@ -78,25 +82,32 @@ const updateBook = async (req, res) => {
            total_copies = $5, available_copies = $6
        WHERE id = $7
        RETURNING *`,
-      [title, author, isbn, category, total_copies, available_copies, id]
+      [title, author, isbn, category, total, available, id]
     );
 
-    // Agar wo ID exist hi nahi karti, to rows empty aayega
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating book:', error.message);
-    res.status(500).json({ error: 'Server error, could not update book' });
+    next(error);
   }
 };
 
-// Function 4: Book delete karo (ID ke basis pe)
-const deleteBook = async (req, res) => {
+// Function 4: Book delete karo (Admin only)
+const deleteBook = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // Check if book has active transactions
+    const activeTx = await pool.query(
+      `SELECT id FROM transactions WHERE book_id = $1 AND status = 'issued'`,
+      [id]
+    );
+    if (activeTx.rows.length > 0) {
+      return res.status(400).json({ error: 'Cannot delete book: copies are currently issued to members' });
+    }
 
     const result = await pool.query(
       'DELETE FROM books WHERE id = $1 RETURNING *',
@@ -109,13 +120,12 @@ const deleteBook = async (req, res) => {
 
     res.status(200).json({ message: 'Book deleted successfully', deletedBook: result.rows[0] });
   } catch (error) {
-    console.error('Error deleting book:', error.message);
-    res.status(500).json({ error: 'Server error, could not delete book' });
+    next(error);
   }
 };
 
-// Function: Ek specific book ki detail do (ID se)
-const getBookById = async (req, res) => {
+// Function 5: Ek specific book ki detail do (ID se)
+const getBookById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -127,10 +137,8 @@ const getBookById = async (req, res) => {
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error fetching book:', error.message);
-    res.status(500).json({ error: 'Server error, could not fetch book' });
+    next(error);
   }
 };
 
-// Is function ko export kar rahe hain taaki routes file me use ho sake
 module.exports = { getAllBooks, getBookById, addBook, updateBook, deleteBook };

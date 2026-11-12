@@ -4,9 +4,9 @@ const express = require('express');
 const router = express.Router();
 
 const { getAllFines, payFine } = require('../controllers/fineController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, isAdmin } = require('../middleware/authMiddleware');
 
-router.get('/', protect, getAllFines);       // Sirf logged-in admin dekh sakta hai
-router.put('/pay/:id', protect, payFine);    // Sirf logged-in admin fine paid mark kar sakta hai
+router.get('/', protect, getAllFines);             // Protected: Admin sees all, member sees own fines
+router.put('/pay/:id', protect, isAdmin, payFine);  // Admin only: fine ko paid mark karna
 
 module.exports = router;

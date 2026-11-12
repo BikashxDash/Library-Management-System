@@ -2,7 +2,7 @@
 
 const pool = require('../config/db');
 
-const getDashboardStats = async (req, res) => {
+const getDashboardStats = async (req, res, next) => {
   try {
     // Total books count
     const totalBooks = await pool.query('SELECT COUNT(*) FROM books');
@@ -27,15 +27,14 @@ const getDashboardStats = async (req, res) => {
     );
 
     res.status(200).json({
-      totalBooks: parseInt(totalBooks.rows[0].count),
-      totalMembers: parseInt(totalMembers.rows[0].count),
-      issuedBooks: parseInt(issuedBooks.rows[0].count),
-      overdueBooks: parseInt(overdueBooks.rows[0].count),
+      totalBooks: parseInt(totalBooks.rows[0].count, 10),
+      totalMembers: parseInt(totalMembers.rows[0].count, 10),
+      issuedBooks: parseInt(issuedBooks.rows[0].count, 10),
+      overdueBooks: parseInt(overdueBooks.rows[0].count, 10),
       unpaidFines: parseFloat(unpaidFines.rows[0].total),
     });
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error.message);
-    res.status(500).json({ error: 'Server error, could not fetch dashboard stats' });
+    next(error);
   }
 };
 

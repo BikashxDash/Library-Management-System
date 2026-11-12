@@ -30,7 +30,12 @@ CREATE TABLE IF NOT EXISTS books (
   title            VARCHAR(255) NOT NULL,
   author           VARCHAR(255) NOT NULL,
   isbn             VARCHAR(20)  UNIQUE,
-  category         VARCHAR(100),
+  category         VARCHAR(100) CHECK (category IN (
+                                  'computer-science', 'mechanical', 'electronics', 'electrical',
+                                  'civil', 'philosophy', 'fiction', 'non-fiction', 'mathematics',
+                                  'physics', 'chemistry', 'biography', 'comics', 'magazine',
+                                  'newspaper', 'history', 'language'
+                                )),
   total_copies     INTEGER      NOT NULL DEFAULT 1
                                 CHECK (total_copies >= 0),
   available_copies INTEGER      NOT NULL DEFAULT 1
