@@ -14,11 +14,17 @@ import AddMemberPage from './pages/AddMemberPage';
 import EditMemberPage from './pages/EditMemberPage';
 import BookCategories from './components/BookCatagories';
 import FineList from './components/FineList';
+import IssueReturnPage from './pages/IssueReturnPage';
+import TransactionsPage from './pages/TransactionsPage';
+import PendingUsersPage from './pages/PendingUsersPage';
+import ReservationsPage from './pages/ReservationsPage';
 
 function Header({ theme, toggleTheme }) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <header className="app-header">
@@ -45,19 +51,40 @@ function Header({ theme, toggleTheme }) {
         </button>
 
         <div className={`app-nav-links ${menuOpen ? 'app-nav-links-open' : ''}`}>
-          <Link to="/books" onClick={closeMenu}>Books</Link>
-
-          {user ? (
+          {/* Admin Navigation */}
+          {user && isAdmin && (
             <>
+              <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>
+              <Link to="/books" onClick={closeMenu}>Books</Link>
               <Link to="/members" onClick={closeMenu}>Members</Link>
-              <Link to="/add-member" onClick={closeMenu}>Add Member</Link>
-              <Link to="/add-book" onClick={closeMenu}>Add Book</Link>
+              <Link to="/issue-return" onClick={closeMenu}>Issue / Return</Link>
+              <Link to="/transactions" onClick={closeMenu}>Transactions</Link>
+              <Link to="/reservations" onClick={closeMenu}>Reservations</Link>
+              <Link to="/fines" onClick={closeMenu}>Fines</Link>
+              <Link to="/pending-users" onClick={closeMenu}>Approvals</Link>
               <button className="app-nav-logout" onClick={() => { logout(); closeMenu(); }}>
                 Logout
               </button>
             </>
-          ) : (
+          )}
+
+          {/* Member Navigation */}
+          {user && !isAdmin && (
             <>
+              <Link to="/books" onClick={closeMenu}>Browse Books</Link>
+              <Link to="/transactions" onClick={closeMenu}>My Issued Books</Link>
+              <Link to="/reservations" onClick={closeMenu}>My Reservations</Link>
+              <Link to="/fines" onClick={closeMenu}>My Fines</Link>
+              <button className="app-nav-logout" onClick={() => { logout(); closeMenu(); }}>
+                Logout
+              </button>
+            </>
+          )}
+
+          {/* Guest Navigation */}
+          {!user && (
+            <>
+              <Link to="/books" onClick={closeMenu}>Books</Link>
               <Link to="/login" onClick={closeMenu}>Login</Link>
               <Link to="/register" onClick={closeMenu}>Register</Link>
             </>
@@ -268,48 +295,106 @@ function App() {
             <Route path="/books/:category" element={<BookList />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard"
-                   element={
-                    <ProtectedRoute>
-                      <DashboardPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/members"
-                   element={
-                    <ProtectedRoute>
-                      <MembersPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/add-book"
-                   element={
-                    <ProtectedRoute>
-                      <AddBookPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/edit-book/:id"
-                   element={
-                    <ProtectedRoute>
-                      <EditBookPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/add-member"
-                   element={
-                    <ProtectedRoute>
-                      <AddMemberPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/edit-member/:id"
-                   element={
-                    <ProtectedRoute>
-                      <EditMemberPage />
-                    </ProtectedRoute>
-            } />
-            <Route path="/fines"
-                   element={
-                    <ProtectedRoute>
-                      <FineList />
-                    </ProtectedRoute>
-            } />
+
+            {/* Admin only routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute adminOnly>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/members"
+              element={
+                <ProtectedRoute adminOnly>
+                  <MembersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-book"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AddBookPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-book/:id"
+              element={
+                <ProtectedRoute adminOnly>
+                  <EditBookPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-member"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AddMemberPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-member/:id"
+              element={
+                <ProtectedRoute adminOnly>
+                  <EditMemberPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/issue-return"
+              element={
+                <ProtectedRoute adminOnly>
+                  <IssueReturnPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pending-users"
+              element={
+                <ProtectedRoute adminOnly>
+                  <PendingUsersPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Shared routes (Admin sees all, Member sees own) */}
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <TransactionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-books"
+              element={
+                <ProtectedRoute>
+                  <TransactionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reservations"
+              element={
+                <ProtectedRoute>
+                  <ReservationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fines"
+              element={
+                <ProtectedRoute>
+                  <FineList />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </BrowserRouter>

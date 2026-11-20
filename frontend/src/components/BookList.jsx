@@ -28,31 +28,60 @@ function BookList() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
+  const fetchBooks = () => {
     setLoading(true);
-    getBooks()
+    setError('');
+    const params = category ? { category } : {};
+    getBooks(params)
       .then((response) => {
         setBooks(response.data);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error('Error fetching books:', error);
+      .catch((err) => {
+        setError(err.response?.data?.error || 'Failed to load books');
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const params = category ? { category } : {};
+    getBooks(params)
+      .then((response) => {
+        if (isMounted) {
+          setBooks(response.data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err.response?.data?.error || 'Failed to load books');
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [category]);
 
   const handleDelete = (deletedId) => {
-    setBooks(books.filter((book) => book.id !== deletedId));
+    setBooks((prev) => prev.filter((book) => book.id !== deletedId));
   };
 
-  const filteredBooks = category
-    ? books.filter((book) => book.category === category)
-    : books;
-
-  if (loading) {
-    return <p style={{ padding: '24px' }}>Loading books...</p>;
-  }
+  const filteredBooks = books
+    .filter((book) => (category ? book.category === category : true))
+    .filter((book) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        book.title?.toLowerCase().includes(term) ||
+        book.author?.toLowerCase().includes(term) ||
+        book.isbn?.toLowerCase().includes(term)
+      );
+    });
 
   return (
     <>
@@ -61,6 +90,14 @@ function BookList() {
           padding: 48px 24px;
           max-width: 1100px;
           margin: 0 auto;
+        }
+        .booklist-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+          gap: 16px;
         }
         .booklist-back {
           display: inline-flex;
@@ -74,7 +111,6 @@ function BookList() {
           border: 1px solid var(--border);
           padding: 8px 18px 8px 14px;
           border-radius: 999px;
-          margin-bottom: 24px;
           cursor: pointer;
           transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
@@ -91,18 +127,61 @@ function BookList() {
           font-family: Georgia, serif;
           font-size: 28px;
           color: var(--text-primary);
-          margin: 0 0 28px 0;
+          margin: 0;
           text-align: center;
+        }
+        .booklist-search-wrap {
+          margin-bottom: 24px;
+        }
+        .booklist-search-input {
+          width: 100%;
+          max-width: 400px;
+          padding: 12px 16px;
+          border-radius: 12px;
+          border: 1px solid var(--border);
+          background: var(--card-bg);
+          color: var(--text-primary);
+          font-size: 14px;
+        }
+        .booklist-search-input:focus {
+          outline: none;
+          border-color: #A9812F;
         }
         .booklist-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 18px;
         }
-        .booklist-empty {
+        .booklist-state-box {
+          background: var(--card-bg);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 48px 24px;
           text-align: center;
+        }
+        .booklist-state-text {
           color: var(--text-muted);
-          padding: 40px 0;
+          font-size: 15px;
+          margin: 0 0 16px 0;
+        }
+        .booklist-retry-btn {
+          background: #1C2233;
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .booklist-error-banner {
+          background: rgba(220, 53, 69, 0.12);
+          color: #dc3545;
+          border: 1px solid rgba(220, 53, 69, 0.3);
+          border-radius: 10px;
+          padding: 12px 16px;
+          margin-bottom: 20px;
+          font-size: 14px;
         }
 
         @media (max-width: 900px) {
@@ -114,20 +193,55 @@ function BookList() {
       `}</style>
 
       <div className="booklist-page">
-        {category && (
-          <button onClick={() => navigate(-1)} className="booklist-back">
-            <span className="booklist-back-arrow">←</span> Back
-          </button>
+        <div className="booklist-header">
+          {category ? (
+            <button onClick={() => navigate(-1)} className="booklist-back">
+              <span className="booklist-back-arrow">←</span> Back
+            </button>
+          ) : <div></div>}
+
+          <h2 className="booklist-title">
+            {category ? categoryLabels[category] || category : 'All Books'}
+          </h2>
+
+          <div style={{ width: '80px' }}></div>
+        </div>
+
+        {error && (
+          <div className="booklist-error-banner">
+            {error}
+          </div>
         )}
 
-        <h2 className="booklist-title">
-          {category ? categoryLabels[category] || category : 'All Books'}
-        </h2>
+        <div className="booklist-search-wrap">
+          <input
+            type="text"
+            className="booklist-search-input"
+            placeholder="Search by title, author, or ISBN..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-        {filteredBooks.length === 0 ? (
-          <p className="booklist-empty">
-            No books found{category ? ' in this category yet' : ''}.
-          </p>
+        {loading ? (
+          <div className="booklist-state-box">
+            <p className="booklist-state-text">Loading books...</p>
+          </div>
+        ) : error ? (
+          <div className="booklist-state-box">
+            <p className="booklist-state-text">{error}</p>
+            <button className="booklist-retry-btn" onClick={fetchBooks}>
+              Retry
+            </button>
+          </div>
+        ) : filteredBooks.length === 0 ? (
+          <div className="booklist-state-box">
+            <p className="booklist-state-text">
+              {searchTerm
+                ? 'No books match your search query.'
+                : `No books found${category ? ' in this category yet' : ''}.`}
+            </p>
+          </div>
         ) : (
           <div className="booklist-grid">
             {filteredBooks.map((book) => (

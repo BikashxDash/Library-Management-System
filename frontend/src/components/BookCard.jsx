@@ -1,25 +1,45 @@
-import { deleteBook } from '../services/api';
+import { useState } from 'react';
+import { deleteBook, createReservation } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 function BookCard({ book, onDelete }) {
   const { user } = useAuth();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [reserving, setReserving] = useState(false);
+  const [inlineMsg, setInlineMsg] = useState({ type: '', text: '' });
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(`Delete "${book.title}"?`);
-    if (!confirmDelete) return;
-
-    const token = localStorage.getItem('token');
-
     try {
-      await deleteBook(book.id, token);
+      await deleteBook(book.id);
       onDelete(book.id);
     } catch (error) {
-      alert(error.response?.data?.error || 'Could not delete book');
+      setInlineMsg({
+        type: 'error',
+        text: error.response?.data?.error || 'Could not delete book',
+      });
+      setConfirmDelete(false);
+    }
+  };
+
+  const handleReserve = async () => {
+    setReserving(true);
+    setInlineMsg({ type: '', text: '' });
+    try {
+      await createReservation({ book_id: book.id });
+      setInlineMsg({ type: 'success', text: 'Book reserved successfully!' });
+    } catch (error) {
+      setInlineMsg({
+        type: 'error',
+        text: error.response?.data?.error || 'Could not reserve book',
+      });
+    } finally {
+      setReserving(false);
     }
   };
 
   const isAvailable = book.available_copies > 0;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <>
@@ -50,6 +70,22 @@ function BookCard({ book, onDelete }) {
           color: var(--text-muted);
           margin: 0 0 14px 0;
         }
+        .book-card-inline-msg {
+          font-size: 12px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          margin-bottom: 12px;
+        }
+        .book-card-inline-msg.success {
+          background: rgba(46, 160, 67, 0.15);
+          color: #2ea043;
+          border: 1px solid rgba(46, 160, 67, 0.3);
+        }
+        .book-card-inline-msg.error {
+          background: rgba(220, 53, 69, 0.15);
+          color: #dc3545;
+          border: 1px solid rgba(220, 53, 69, 0.3);
+        }
         .book-card-meta {
           display: flex;
           align-items: center;
@@ -57,6 +93,8 @@ function BookCard({ book, onDelete }) {
           margin-top: auto;
           padding-top: 12px;
           border-top: 1px solid var(--border);
+          gap: 8px;
+          flex-wrap: wrap;
         }
         .book-card-availability {
           font-size: 12px;
@@ -74,7 +112,8 @@ function BookCard({ book, onDelete }) {
         }
         .book-card-actions {
           display: flex;
-          gap: 12px;
+          align-items: center;
+          gap: 10px;
         }
         .book-card-actions a {
           font-size: 12px;
@@ -85,7 +124,7 @@ function BookCard({ book, onDelete }) {
         .book-card-actions a:hover {
           text-decoration: underline;
         }
-        .book-card-actions button {
+        .book-card-btn-delete {
           font-size: 12px;
           font-weight: 600;
           color: #dc3545;
@@ -94,8 +133,47 @@ function BookCard({ book, onDelete }) {
           cursor: pointer;
           padding: 0;
         }
-        .book-card-actions button:hover {
+        .book-card-btn-delete:hover {
           text-decoration: underline;
+        }
+        .book-card-btn-reserve {
+          font-size: 12px;
+          font-weight: 600;
+          color: #A9812F;
+          background: rgba(169, 129, 47, 0.12);
+          border: 1px solid #A9812F;
+          border-radius: 6px;
+          padding: 4px 8px;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+        .book-card-btn-reserve:hover:not(:disabled) {
+          background: #A9812F;
+          color: #ffffff;
+        }
+        .book-card-confirm-box {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+        }
+        .book-card-confirm-btn {
+          background: #dc3545;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          padding: 3px 6px;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .book-card-cancel-btn {
+          background: transparent;
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 2px 5px;
+          font-size: 11px;
+          cursor: pointer;
         }
       `}</style>
 
@@ -103,17 +181,55 @@ function BookCard({ book, onDelete }) {
         <h3 className="book-card-title">{book.title}</h3>
         <p className="book-card-author">by {book.author}</p>
 
+        {inlineMsg.text && (
+          <div className={`book-card-inline-msg ${inlineMsg.type}`}>
+            {inlineMsg.text}
+          </div>
+        )}
+
         <div className="book-card-meta">
           <span className={`book-card-availability ${isAvailable ? 'in-stock' : 'out-of-stock'}`}>
             {book.available_copies} / {book.total_copies} available
           </span>
 
-          {user && (
-            <div className="book-card-actions">
-              <Link to={`/edit-book/${book.id}`}>Edit</Link>
-              <button onClick={handleDelete}>Delete</button>
-            </div>
-          )}
+          <div className="book-card-actions">
+            {!isAvailable && user && (
+              <button
+                className="book-card-btn-reserve"
+                onClick={handleReserve}
+                disabled={reserving}
+              >
+                {reserving ? 'Reserving...' : 'Reserve'}
+              </button>
+            )}
+
+            {isAdmin && (
+              <>
+                <Link to={`/edit-book/${book.id}`}>Edit</Link>
+                {confirmDelete ? (
+                  <div className="book-card-confirm-box">
+                    <span>Delete?</span>
+                    <button className="book-card-confirm-btn" onClick={handleDelete}>
+                      Yes
+                    </button>
+                    <button
+                      className="book-card-cancel-btn"
+                      onClick={() => setConfirmDelete(false)}
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="book-card-btn-delete"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </>

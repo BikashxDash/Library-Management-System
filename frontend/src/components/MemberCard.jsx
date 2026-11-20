@@ -1,23 +1,25 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteMember } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 function MemberCard({ member, onDelete }) {
   const { user } = useAuth();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(`Delete "${member.name}"?`);
-    if (!confirmDelete) return;
-
-    const token = localStorage.getItem('token');
-
+    setErrorMsg('');
     try {
-      await deleteMember(member.id, token);
+      await deleteMember(member.id);
       onDelete(member.id);
     } catch (error) {
-      alert(error.response?.data?.error || 'Could not delete member');
+      setErrorMsg(error.response?.data?.error || 'Could not delete member');
+      setConfirmDelete(false);
     }
   };
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <>
@@ -52,6 +54,15 @@ function MemberCard({ member, onDelete }) {
           color: var(--text-muted);
           margin: 0 0 14px 0;
         }
+        .member-card-error {
+          font-size: 12px;
+          padding: 6px 10px;
+          border-radius: 6px;
+          margin-bottom: 10px;
+          background: rgba(220, 53, 69, 0.15);
+          color: #dc3545;
+          border: 1px solid rgba(220, 53, 69, 0.3);
+        }
         .member-card-meta {
           display: flex;
           align-items: center;
@@ -59,6 +70,8 @@ function MemberCard({ member, onDelete }) {
           margin-top: auto;
           padding-top: 12px;
           border-top: 1px solid var(--border);
+          gap: 8px;
+          flex-wrap: wrap;
         }
         .member-card-status {
           font-size: 12px;
@@ -76,6 +89,7 @@ function MemberCard({ member, onDelete }) {
         }
         .member-card-actions {
           display: flex;
+          align-items: center;
           gap: 12px;
         }
         .member-card-actions a {
@@ -87,7 +101,7 @@ function MemberCard({ member, onDelete }) {
         .member-card-actions a:hover {
           text-decoration: underline;
         }
-        .member-card-actions button {
+        .member-card-btn-delete {
           font-size: 12px;
           font-weight: 600;
           color: #dc3545;
@@ -96,8 +110,32 @@ function MemberCard({ member, onDelete }) {
           cursor: pointer;
           padding: 0;
         }
-        .member-card-actions button:hover {
+        .member-card-btn-delete:hover {
           text-decoration: underline;
+        }
+        .member-card-confirm-box {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+        }
+        .member-card-confirm-btn {
+          background: #dc3545;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          padding: 3px 6px;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .member-card-cancel-btn {
+          background: transparent;
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 2px 5px;
+          font-size: 11px;
+          cursor: pointer;
         }
       `}</style>
 
@@ -106,15 +144,37 @@ function MemberCard({ member, onDelete }) {
         <p className="member-card-email">{member.email}</p>
         <p className="member-card-phone">Phone: {member.phone || 'N/A'}</p>
 
+        {errorMsg && <div className="member-card-error">{errorMsg}</div>}
+
         <div className="member-card-meta">
           <span className={`member-card-status ${member.is_active ? 'active' : 'inactive'}`}>
             {member.is_active ? 'Active' : 'Inactive'}
           </span>
 
-          {user && (
+          {isAdmin && (
             <div className="member-card-actions">
               <Link to={`/edit-member/${member.id}`}>Edit</Link>
-              <button onClick={handleDelete}>Delete</button>
+              {confirmDelete ? (
+                <div className="member-card-confirm-box">
+                  <span>Delete?</span>
+                  <button className="member-card-confirm-btn" onClick={handleDelete}>
+                    Yes
+                  </button>
+                  <button
+                    className="member-card-cancel-btn"
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="member-card-btn-delete"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete
+                </button>
+              )}
             </div>
           )}
         </div>
