@@ -29,11 +29,11 @@ function IssueReturnPage() {
 
   // Load initial data
   const loadData = () => {
-    getBooks().then((res) => setBooks(res.data)).catch(() => {});
-    getMembers().then((res) => setMembers(res.data)).catch(() => {});
+    getBooks().then((res) => setBooks(res.data)).catch(() => { });
+    getMembers().then((res) => setMembers(res.data)).catch(() => { });
     getTransactions({ status: 'issued' })
       .then((res) => setIssuedTransactions(res.data.filter((t) => t.status === 'issued')))
-      .catch(() => {});
+      .catch(() => { });
   };
 
   useEffect(() => {
@@ -460,3 +460,4 @@ function IssueReturnPage() {
 }
 
 export default IssueReturnPage;
+
